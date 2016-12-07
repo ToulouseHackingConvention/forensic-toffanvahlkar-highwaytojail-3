@@ -7,23 +7,25 @@
 #include <openssl/conf.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
+ #include <openssl/rand.h>
 
 #define SRC_PATH "./flag.plain"
 #define DST_PATH "./flag.cipher"
 
-void handleErrors(void);
+void handleErrors();
+int get_random_bytes(unsigned char *buffer, unsigned int num);
 int encrypt(unsigned char *key, unsigned char *iv, int fsrc, int fdst);
 int decrypt(unsigned char *key, int fsrc, int fdst);
 
-int main (void)
+int main (int argc, char *argv[])
 {
     /* Set up the key and iv. Do I need to say to not hard code these in a real application? :-) */
 
     /* A 256 bit key. */
-    unsigned char *key = (unsigned char *)"01234567890123456789012345678901";
+    unsigned char *key = (unsigned char *) malloc(32*sizeof(unsigned char));
 
     /* A 128 bit IV. */
-    unsigned char *iv = (unsigned char *)"01234567890123456";
+    unsigned char *iv = (unsigned char *) malloc(16*sizeof(unsigned char));
 
     /* File descriptors to be used. */
     int fplain;
@@ -34,6 +36,14 @@ int main (void)
     ERR_load_crypto_strings();
     OpenSSL_add_all_algorithms();
     OPENSSL_config(NULL);
+
+    /* Generate IV and key. */
+    printf("Getting random iv...\n");
+    if (!get_random_bytes(iv, 16)) handleErrors();
+    BIO_dump_fp (stdout, iv, 16);
+    printf("Getting random key...\n");
+    if (!get_random_bytes(key, 32)) handleErrors();
+    BIO_dump_fp (stdout, key, 32);
 
     /* Encryption from fplain to fcipher. */
     printf("Encryption...\n");
@@ -92,10 +102,33 @@ int main (void)
     return 0;
 }
 
+int get_random_bytes(unsigned char *buffer, unsigned int num)
+{
+    static int initialised = 0;
+
+    if (!initialised)
+    {
+        RAND_poll();
+        initialised = 1;
+    }
+
+    int rc = RAND_bytes(buffer, num);
+    unsigned long err = ERR_get_error();
+
+    if(rc != 1) {
+        /* RAND_bytes failed */
+        /* `err` is valid    */
+        printf("Error!\n");
+        ERR_print_errors_fp(stderr);
+    }
+
+    return rc;
+}
+
 /*
  * Handle errors related to the OpenSSL library.
  * */
-void handleErrors(void)
+void handleErrors()
 {
     ERR_print_errors_fp(stderr);
     abort();
