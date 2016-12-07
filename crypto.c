@@ -40,7 +40,7 @@ int get_random_bytes(unsigned char *buffer, unsigned int num)
     if(rc != 1) {
         /* RAND_bytes failed */
         /* `err` is valid    */
-        printf("Error!\n");
+        fprintf(stderr, "Error during random generation!\n");
         ERR_print_errors_fp(stderr);
     }
 
@@ -74,7 +74,7 @@ int encrypt(unsigned char *key, unsigned char *iv, int fsrc, int fdst)
     len = write(fdst, iv, 16);
     if (len != 16)
     {
-        printf("Error writing IV ; len: %d\n", len);
+        fprintf(stderr, "Error writing IV to destination file; len: %d\n", len);
         exit(0);
     }
     ciphertext_len += len;
@@ -148,7 +148,7 @@ int decrypt(unsigned char *key, int fsrc, int fdst)
     len = read(fsrc, iv, 16);
     if (len != 16)
     {
-        printf("Error reading IV ; len: %d\n", len);
+        fprintf(stderr, "Error reading IV from source file; len: %d\n", len);
         exit(0);
     }
 

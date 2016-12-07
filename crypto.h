@@ -15,6 +15,8 @@
 #define KEY_SIZE 32
 #define IV_SIZE 16
 
+void initialise_openssl();
+void close_openssl();
 void handleErrors();
 int get_random_bytes(unsigned char *buffer, unsigned int num);
 int encrypt(unsigned char *key, unsigned char *iv, int fsrc, int fdst);
