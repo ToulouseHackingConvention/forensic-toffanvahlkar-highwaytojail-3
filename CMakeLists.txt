@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project("All Night Long 1.3")
-add_executable(cryptolock main.c)
+add_executable(cryptolock main.c crypto.c)
 find_package(OpenSSL)
 if (OPENSSL_FOUND)
     include_directories(${OPENSSL_INCLUDE_DIR})
