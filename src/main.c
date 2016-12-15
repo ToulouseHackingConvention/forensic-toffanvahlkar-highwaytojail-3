@@ -134,6 +134,7 @@ int lock_file(unsigned char *key, int ftarget)
 
     /* Used for copying files. */
     int size;
+    int total_size = 0;
     char *buffer = (char*) malloc(256*sizeof(char));
 
     /* Check that the target file was correctly opened. */
@@ -167,10 +168,26 @@ int lock_file(unsigned char *key, int ftarget)
     lseek(ftmp, 0, SEEK_SET);
 
     /* Copy ftmp to ftarget (therefore erasing previous plaintext data). */
+    total_size = 0;
     while((size = read(ftmp, buffer, 256)) > 0)
     {
         size = write(ftarget, buffer, size);
-        if (size < 0) perror("Error while writing ciphertext back to file:");
+        if (size < 0)
+        {
+            perror("Error while writing ciphertext back to file:");
+            break;
+        }
+        else
+        {
+            total_size += size;
+        }
+    }
+
+    /* Truncate the file if needed. */
+    if (total_size > 0)
+    {
+        if(ftruncate(ftarget, total_size) < 0)
+            perror("Error while truncating file:");
     }
 
     /* Close both file descriptors. */
@@ -194,6 +211,7 @@ int unlock_file(unsigned char *key, int ftarget)
 
     /* Used for copying files. */
     int size;
+    int total_size = 0;
     char buffer[256];
 
     /* Check that the target file was correctly opened. */
@@ -223,9 +241,26 @@ int unlock_file(unsigned char *key, int ftarget)
     lseek(ftmp, 0, SEEK_SET);
 
     /* Copy ftmp to ftarget (therefore erasing previous plaintext data). */
+    total_size = 0;
     while((size = read(ftmp, buffer, 256)) > 0)
     {
-        write(ftarget, buffer, size);
+        size = write(ftarget, buffer, size);
+        if (size < 0)
+        {
+            perror("Error while writing ciphertext back to file:");
+            break;
+        }
+        else
+        {
+            total_size += size;
+        }
+    }
+
+    /* Truncate the file if needed. */
+    if (total_size > 0)
+    {
+        if(ftruncate(ftarget, total_size) < 0)
+            perror("Error while truncating file:");
     }
 
     /* Close both file descriptors. */
