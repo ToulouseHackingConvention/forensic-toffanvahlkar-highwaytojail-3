@@ -19,7 +19,7 @@ void initialise_openssl();
 void close_openssl();
 void handleErrors();
 int get_random_bytes(unsigned char *buffer, unsigned int num);
-int encrypt(unsigned char *key, unsigned char *iv, int fsrc, int fdst);
+int encrypt(unsigned char *key, int fsrc, int fdst);
 int decrypt(unsigned char *key, int fsrc, int fdst);
 
 #endif

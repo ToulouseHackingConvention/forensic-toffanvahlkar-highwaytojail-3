@@ -52,7 +52,7 @@ int get_random_bytes(unsigned char *buffer, unsigned int num)
  * Encrypt a file fsrc to another fdst.
  * Key (256 bits) and IV (128 bits) should be randomised.
  * */
-int encrypt(unsigned char *key, unsigned char *iv, int fsrc, int fdst)
+int encrypt(unsigned char *key, int fsrc, int fdst)
 {
     EVP_CIPHER_CTX *ctx;
 
@@ -69,6 +69,10 @@ int encrypt(unsigned char *key, unsigned char *iv, int fsrc, int fdst)
 
     /* Length variable used by cryptographic primitives. */
     int len = 0;
+
+    /* Generate 128 bits IV. */
+    unsigned char *iv = (unsigned char *) malloc(IV_SIZE*sizeof(unsigned char));
+    if (!get_random_bytes(iv, IV_SIZE)) handleErrors();
 
     /* Write the 128 bit IV at the beginning of the file. */
     len = write(fdst, iv, 16);
