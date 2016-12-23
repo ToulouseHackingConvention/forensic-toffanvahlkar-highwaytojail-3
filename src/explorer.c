@@ -13,7 +13,7 @@ int handle_folder(unsigned char *key, enum action action, int dirfd)
     /* Check that the main directory has been opened correctly. */
     if (dirfd < 0)
     {
-        perror("Couldn't open the directory!");
+        perror("[handle_folder, open] Couldn't open the directory");
         return -1;
     }
 
@@ -21,7 +21,7 @@ int handle_folder(unsigned char *key, enum action action, int dirfd)
     dp = fdopendir(dirfd);
     if (dp == NULL)
     {
-        perror("Couldn't open the directory");
+        perror("[handle_folder, opendir] Couldn't open the directory");
         return -2;
     }
 
@@ -85,7 +85,7 @@ int handle_file(unsigned char *key, enum action action, int ftarget)
     if(ftarget < 0)
     {
         /* Handle errors. */
-        perror("Error opening source file!\n");
+        perror("[handle_file] Error opening source file");
         return -1;
     }
 
@@ -96,7 +96,7 @@ int handle_file(unsigned char *key, enum action action, int ftarget)
     if (ftmp < 0)
     {
         /* Handle errors. */
-        perror("Error opening destination file!\n");
+        perror("[handle_file] Error opening (temporary) destination file");
         return -2;
     }
 
@@ -129,7 +129,7 @@ int handle_file(unsigned char *key, enum action action, int ftarget)
         size = write(ftarget, buffer, size);
         if (size < 0)
         {
-            perror("Error while writing ciphertext back to file:");
+            perror("[handle_file] Error while writing ciphertext back to file");
             break;
         }
         else
@@ -142,12 +142,12 @@ int handle_file(unsigned char *key, enum action action, int ftarget)
     if (total_size > 0)
     {
         if(ftruncate(ftarget, total_size) < 0)
-            perror("Error while truncating target file:");
+            perror("[handle_file] Error while truncating target file");
     }
 
     /* Truncate the temporary file. */
     if(ftruncate(ftmp, 0) < 0)
-        perror("Error while truncating temporary file:");
+        perror("[handle_file] Error while truncating temporary file");
 
     /* Close both file descriptors. */
     close(ftmp);

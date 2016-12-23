@@ -11,7 +11,8 @@
 void help_text(char *name)
 {
     printf("Usage: %s [-e | --encrypt | -d | --decrypt]\n", name);
-    printf("This software should not be used outside of the THCon challenge.");
+    printf("This software should not be used outside of the THCon challenge.\n");
+    printf("The Toulouse Hacking Convention is not responsible for the use of this software.\n");
 }
 
 void safety_check()
@@ -87,12 +88,12 @@ void initialise_key(unsigned char *key, enum action action)
             key_fd = open(KEY_PATH, O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
             if (key_fd < 0)
             {
-                perror("Error opening key file:");
+                perror("[Encryption] Error opening key file");
                 abort();
             }
             if (write(key_fd, key, KEY_SIZE) != KEY_SIZE)
             {
-                perror("Error writing key to key file:");
+                perror("[Encryption] Error writing key to key file");
                 abort();
             }
             close(key_fd);
@@ -102,12 +103,12 @@ void initialise_key(unsigned char *key, enum action action)
             key_fd = open(KEY_PATH, O_RDONLY);
             if (key_fd < 0)
             {
-                perror("Error opening key file:");
+                perror("[Decryption] Error opening key file");
                 abort();
             }
             if (read(key_fd, key, KEY_SIZE) != KEY_SIZE)
             {
-                perror("Error reading key from key file:");
+                perror("[Decryption] Error reading key from key file");
                 abort();
             }
             close(key_fd);
