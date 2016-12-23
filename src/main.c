@@ -6,11 +6,12 @@
 #include "crypto.h"
 #include "explorer.h"
 
-#define KEY_PATH "/tmp/key"
+#define DEFAULT_KEY_PATH "/tmp/key"
+#define PATH_LENGTH 256
 
 void help_text(char *name)
 {
-    printf("Usage: %s [-e | --encrypt | -d | --decrypt]\n", name);
+    printf("Usage: %s -e | --encrypt | -d | --decrypt [keyfile]\n", name);
     printf("This software should not be used outside of the THCon challenge.\n");
     printf("The Toulouse Hacking Convention is not responsible for the use of this software.\n");
 }
@@ -30,13 +31,13 @@ void safety_check()
     }
 }
 
-int cmdline_parse(int argc, char *argv[], enum action *action)
+int cmdline_parse(int argc, char *argv[], enum action *action, char *keyfile)
 {
     /* Parse command line. */
     if (argc > 1)
     {
         /* Wrong number of argument. */
-        if (argc != 2)
+        if (argc > 3)
         {
             help_text(argv[0]);
             return -1;
@@ -47,13 +48,19 @@ int cmdline_parse(int argc, char *argv[], enum action *action)
         {
             /* Encrypt target folder using a random key. */
             *action = ENCRYPT;
+            if (argc == 3) strncpy(keyfile, argv[2], PATH_LENGTH);
+            else strncpy(keyfile, DEFAULT_KEY_PATH, PATH_LENGTH);
+            keyfile[PATH_LENGTH-1] = '\0';
         }
         else if ((strcmp(argv[1], "--decrypt") == 0) || (strcmp(argv[1], "-d") == 0))
         {
             /* Decrypt target folder using key from stdin. */
             *action = DECRYPT;
+            if (argc == 3) strncpy(keyfile, argv[2], PATH_LENGTH);
+            else strncpy(keyfile, DEFAULT_KEY_PATH, PATH_LENGTH);
+            keyfile[PATH_LENGTH-1] = '\0';
         }
-        else if ((strcmp(argv[1], "--help") == 0) || (strcmp(argv[1], "-h") == 0))
+        else if ((argc == 2) && ((strcmp(argv[1], "--help") == 0) || (strcmp(argv[1], "-h") == 0)))
         {
             /* Display help text. */
             help_text(argv[0]);
@@ -77,7 +84,7 @@ int cmdline_parse(int argc, char *argv[], enum action *action)
 
 /* Initialise the key depending on the target action.
  * key must be an allocated buffer of size KEY_SIZE. */
-void initialise_key(unsigned char *key, enum action action)
+void initialise_key(enum action action, char *keyfile, unsigned char *key)
 {
     int key_fd;
     switch (action)
@@ -85,7 +92,7 @@ void initialise_key(unsigned char *key, enum action action)
         case ENCRYPT:
             /* Generate a random 256 bit key. */
             if (!get_random_bytes(key, KEY_SIZE)) handleErrors();
-            key_fd = open(KEY_PATH, O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+            key_fd = open(keyfile, O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
             if (key_fd < 0)
             {
                 perror("[Encryption] Error opening key file");
@@ -100,7 +107,7 @@ void initialise_key(unsigned char *key, enum action action)
             break;
 
         case DECRYPT:
-            key_fd = open(KEY_PATH, O_RDONLY);
+            key_fd = open(keyfile, O_RDONLY);
             if (key_fd < 0)
             {
                 perror("[Decryption] Error opening key file");
@@ -137,6 +144,9 @@ int main(int argc, char *argv[])
     /* A 256 bit key. */
     unsigned char *key;
 
+    /* Path to keyfile. */
+    char *keyfile;
+
     /* Action to perform. */
     enum action action;
 
@@ -144,15 +154,17 @@ int main(int argc, char *argv[])
     target_folder = "/tmp/test";
     printf("Target folder: %s\n", target_folder);
 
+    keyfile = (char *) malloc(PATH_LENGTH*sizeof(char));
+
     int res;
-    if ((res = cmdline_parse(argc, argv, &action)) <= 0) exit(-res);
+    if ((res = cmdline_parse(argc, argv, &action, keyfile)) <= 0) exit(-res);
 
     safety_check();
 
     initialise_openssl();
 
     key = (unsigned char *) malloc(KEY_SIZE*sizeof(unsigned char));
-    initialise_key(key, action);
+    initialise_key(action, keyfile, key);
 
     /* Lock (encrypt in place) the target folder. */
     target_fd = open(target_folder, O_RDONLY | O_DIRECTORY);
