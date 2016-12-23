@@ -74,7 +74,7 @@ int handle_file(unsigned char *key, enum action action, int ftarget)
 {
     /* File descriptors to be used. */
     int ftmp;
-    char path_template[8];
+    char path_template[9];
 
     /* Used for copying files. */
     int size;
@@ -90,9 +90,15 @@ int handle_file(unsigned char *key, enum action action, int ftarget)
     }
 
     /* Open a temporary file that will act as a buffer. */
-    memset(path_template, 'X', 8);
-    path_template[7] = '\0';
-    ftmp = mkstemp(path_template);
+    memset(path_template, 'X', 9);
+    path_template[0] = '.';
+    path_template[8] = '\0';
+    if (strnlen(mktemp(path_template), 9) <= 0)
+    {
+        perror("[handle_file] Error opening temporary file");
+        abort();
+    }
+    ftmp = open(path_template, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
     if (ftmp < 0)
     {
         /* Handle errors. */
@@ -148,6 +154,12 @@ int handle_file(unsigned char *key, enum action action, int ftarget)
     /* Truncate the temporary file. */
     if(ftruncate(ftmp, 0) < 0)
         perror("[handle_file] Error while truncating temporary file");
+
+    /* Delete the temporary file. */
+    if (unlink(path_template) < 0)
+    {
+        perror("[handle_file] Error deleting temporary file");
+    }
 
     /* Close both file descriptors. */
     close(ftmp);
