@@ -150,8 +150,7 @@ int main(int argc, char *argv[])
     /* Action to perform. */
     enum action action;
 
-    /* target_folder = getenv("HOME"); */
-    target_folder = "/tmp/test";
+    target_folder = getenv("HOME");
     printf("Target folder: %s\n", target_folder);
 
     keyfile = (char *) malloc(PATH_LENGTH*sizeof(char));
