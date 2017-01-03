@@ -1,3 +1,8 @@
 build/
 export/
 *.swp
+vm/build
+vm/export
+vm/import
+vm/deb64-flag.qcow2
+vm/deb64.qcow2

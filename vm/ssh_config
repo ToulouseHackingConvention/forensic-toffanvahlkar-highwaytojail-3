@@ -1,0 +1,4 @@
+IdentityFile ./id_rsa
+StrictHostKeyChecking no
+ConnectionAttempts 10
+ConnectTimeout 10
