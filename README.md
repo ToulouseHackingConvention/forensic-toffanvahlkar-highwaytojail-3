@@ -11,6 +11,8 @@
 
 - export/guest\_dump : dump de la mémoire d'une VM infectée.
 - export/deb64-noflag.qcow2 : VM saine sans flag servant à utiliser le programme malveillant en environnement protégé.
+- export/id_rsa.pub : Identité SSH (clé publique) à utiliser pour se connecter sur la VM sous l'utilisateur `pigeon`.
+- export/id_rsa : Identité SSH (clé privée) à utiliser pour se connecter sur la VM sous l'utilisateur `pigeon`.
 
 #### Également disponible à destination des testeurs :
 

@@ -14,6 +14,8 @@ export: deb64.qcow2 deb64-flag.qcow2 start_vm.sh qemu-ifup.sh qemu-ifdown.sh ssh
 	rm -f build
 	ln -s ../build
 	cp deb64.qcow2 export/deb64-noflag.qcow2
+	cp id_rsa.pub export/
+	cp id_rsa export/
 	sudo ./start_vm.sh
 
 clean:
