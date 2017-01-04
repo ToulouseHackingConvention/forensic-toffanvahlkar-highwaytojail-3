@@ -1,12 +1,14 @@
 all: flag export
 
-flag: deb64.qcow2 upload_flag.sh
+flag: deb64-flag.qcow2
+
+deb64-flag.qcow2: deb64.qcow2 upload_flag.sh
 	rm -f import
 	ln -s ../import
 	qemu-img create -f qcow2 -b deb64.qcow2 deb64-flag.qcow2
 	sudo ./upload_flag.sh
 
-export: flag deb64.qcow2 start_vm.sh qemu-ifup.sh qemu-ifdown.sh ssh_config id_rsa id_rsa.pub
+export: deb64.qcow2 deb64-flag.qcow2 start_vm.sh qemu-ifup.sh qemu-ifdown.sh ssh_config id_rsa id_rsa.pub
 	rm -f export
 	ln -s ../export
 	rm -f build
