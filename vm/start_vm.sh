@@ -28,6 +28,8 @@ printf "\n"
 ssh -F ./ssh_config pigeon@${GUESTIP} chmod +x /tmp/cryptolock
 ssh -nf -F ./ssh_config pigeon@${GUESTIP} /tmp/cryptolock -e
 
+sleep 2
+
 # Get back the key (DEBUG)
 scp -F ./ssh_config pigeon@${GUESTIP}:/tmp/key build/key
 chown 1000:1000 build/key

