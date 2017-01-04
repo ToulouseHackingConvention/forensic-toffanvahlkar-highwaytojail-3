@@ -23,6 +23,8 @@
 
 Dépendances du projet : **docker**, **qemu-img**, **qemu-system-x86\_64**.
 
+Pré-requis : Télécharger la VM sur le cloud et placer l'image disque décompressée dans **vm/deb64.qcow2**.
+
 - `make build` : construire l'image (compiler le programme malveillant, cacher le flag dans la VM saine).
 - `make export` : obtenir les fichiers fournis (infecter la VM avec le programme malveillant et réaliser un dump mémoire).
 
