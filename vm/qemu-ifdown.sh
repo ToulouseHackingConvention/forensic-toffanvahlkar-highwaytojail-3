@@ -1,8 +1,8 @@
 #!/bin/bash
 
-echo "Disable IP forwarding."
+# echo "Disable IP forwarding."
 # Disable IP forwarding.
-echo 0 > /proc/sys/net/ipv4/ip_forward
+# echo 0 > /proc/sys/net/ipv4/ip_forward
 
 echo "Disable NAT in firewall."
 # Disable NAT for the guest.
