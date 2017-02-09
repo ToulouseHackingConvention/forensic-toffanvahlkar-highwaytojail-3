@@ -22,6 +22,6 @@ clean:
 
 clean-all: clean
 	make -C vm/ clean
-	sudo docker rmi $(IMG)
+	-sudo docker rmi $(IMG)
 
 .PHONY: all build image flag export clean clean-all
