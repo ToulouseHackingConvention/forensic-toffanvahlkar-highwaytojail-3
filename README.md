@@ -1,62 +1,71 @@
-# forensic-toffanvahlkar-allnightlong-3
+# Highway to jail - part. 1
 
 - Auteur : Vahlkar
 - Type : Forensic
 
-## Description
+## Challenge
+### Nom de production
+Highway to jail - part. 1
+
+### Descripion du challenge
+
+Ce challenge est une sous partie du challenge
+misc-toffanvahlkar-highwaytojail-1.  Le dépot permet de générer un cryptolocker
+(malware qui chiffre les données de l'utilisateur en échange d'une rançon).
+Le but du challenge est d'effectuer une analyse forensique de la machine infectée
+afin de retrouver la clé utilisée pour chiffre les données et donc les
+déchiffrer.
+
+### Description participant
+
+Voir misc-toffanvahlkar-highwaytojail-1.
 
 ### Fichiers fournis
 
-#### Liste des fichiers fournis (au candidat) :
+**ATTENTION** : le binaire cryptolock est destiné à chiffrer le home de
+l'utilisateur avec une clé générée aléatoirement, ne le lancez pas en dehors
+d'une VM dédiée.
 
-- export/guest\_dump : dump de la mémoire d'une VM infectée.
-- export/deb64-noflag.qcow2 : VM saine sans flag servant à utiliser le programme malveillant en environnement protégé.
-- export/id_rsa.pub : Identité SSH (clé publique) à utiliser pour se connecter sur la VM sous l'utilisateur `pigeon`.
-- export/id_rsa : Identité SSH (clé privée) à utiliser pour se connecter sur la VM sous l'utilisateur `pigeon`.
+- `export/cryptolock` : programme malveillant utilisé dans
+  misc-toffanvahlkar-highwaytojail-1, ne pas le mettre directement à
+  disposition des participants.
 
-#### Également disponible à destination des testeurs :
+#### Remarques
 
-**ATTENTION** : le binaire cryptolock est destiné à chiffrer le home de l'utilisateur avec une clé générée aléatoirement, ne le lancez pas en dehors d'une VM dédiée.
+Le programme malveillant est conçu pour ne se lancer que dans certaines
+conditions sur la VM.  La clé utilisée pour chiffrer les données est envoyée
+une fois lors d'une connexion à la VM sur le port `54321` (partie gérée par
+misc-toffanvahlkar-highwaytojail-1). La clé n'est bien évidemment pas à fournir
+aux participants (le but du challenge étant de la retrouver) mais celle-ci peut
+servir à des fins de debug / test du challenge.
 
-- build/cryptolock : Le programme malveillant, conçu pour ne se lancer que dans certaines conditions sur la VM.
-- build/key : La clé utilisée pour chiffrer les données lors de la dernière exécution du programme malveillant.
+### Changement de flag
 
-## Utilisation
+Le flag est défini dans le dépot misc-toffanvahlkar-highwaytojail-1, ce dépot
+n'en étant qu'une sous partie. Pour plus d'informations voir
+misc-toffanvahlkar-highwaytojail-1.
+
+### Usage
 
 Dépendances du projet : **docker**, **qemu-img**, **qemu-system-x86\_64**.
 
-Pré-requis : Télécharger la VM sur le cloud et placer l'image disque décompressée dans **vm/deb64.qcow2**.
-
-- `make build` : construire l'image (compiler le programme malveillant, cacher le flag dans la VM saine).
-- `make export` : obtenir les fichiers fournis (infecter la VM avec le programme malveillant et réaliser un dump mémoire).
-
-### Modifier le flag
-
-Le dossier import est transféré sur le home de la VM avec la commande `make build`.
-Ce dossier est la cible de l'attaque, déclenchée avec la commande `make export`.
-
-Le flag est dans la vidéo import/kiwi.mp4.
+`make export` pour compiler le binaire. Celui-ci est utilisé par
+misc-toffanvahlkar-highwaytojail-1.
 
 ### Nettoyer
 
-- `make clean` : supprime les fichiers fournis (dossier export & build).
-- `make clean-all` : supprime l'image (servant à la comilation du programme malveillant) et restaure l'état de la VM à son état d'origine (sans flag).
+- `make clean` : supprime les fichiers fournis (dossier `export`).
+- `make clean-all` : supprime l'image (servant à la comilation du programme malveillant).
 
-## État
+### Situation
 
-À tester (version 46e539f)
+| Relecture | Construction | Test | Déploiement |
+| --- | --- | --- | --- |
+| toffan() | toffan() | toffan() | |
+| Vahlkar(version 46e539f) | Vahlkar() | Vahlkar () | |
+| | | | |
 
-### Relecture
+### Tests
 
-- vahlkar (version 46e539f)
-
-### Test
-
-### Déploiement
-
-### Relecture Déploiement
-
-### Test Déploiement
-
-### Docker-compose
-
+Des scripts de solution semi-automatiques sont disponibles dans les dossiers
+`solution` de chaque dépot.
