@@ -1,13 +1,22 @@
 all: solve
 
+tmp:
+	mkdir -p tmp
+
+export:
+	mkdir -p export
+
+res:
+	-ln -s ../../solution/export res
+
 solve:
-	ln -s ../../solution/export res
-	./extract.sh
-	echo "Please upload the potential keys on the VM and then use crack.sh to test them."
-	# ./vm_solve.sh
+	bin/dump_analyse
 
 clean:
 	rm -rf res
-	rm -rf out
+	rm -rf tmp
 
-.PHONY: all solve clean
+clean-all: clean
+	rm -rf export
+
+.PHONY: all solve clean clean-all

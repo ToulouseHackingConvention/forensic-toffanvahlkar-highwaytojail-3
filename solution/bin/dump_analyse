@@ -1,26 +1,42 @@
 #!/bin/bash
 
-OUT="out"
-FILES="$OUT/files.txt"
-PROCS="$OUT/psaux.txt"
-MAPS="$OUT/proc_maps.txt"
+set -e
 
-mkdir -p "$OUT"
+readonly RESOURCES="res"
+readonly TMPDIR="tmp"
+readonly EXPORT="export"
+readonly FILES="${TMPDIR}/files.txt"
+readonly PROCS="${TMPDIR}/psaux.txt"
+readonly MAPS="${TMPDIR}/proc_maps.txt"
 
 # Get the usefull files (malware and ciphered home).
+set -x
 volatility -f res/guest_dump --profile=LinuxDebian87x64 linux_enumerate_files > "$FILES"
+set +x
 inode_bin=$(grep cryptolock "$FILES" | cut -d " " -f 1)
 
-volatility -f res/guest_dump --profile=LinuxDebian87x64 linux_find_file -i "${inode_bin}" -O "$OUT/cryptolock" &
+set -x
+volatility -f res/guest_dump --profile=LinuxDebian87x64 linux_find_file -i "${inode_bin}" -O "${EXPORT}/cryptolock" &
+set +x
 
 # Dump the malware memory.
+
+set -x
 volatility -f res/guest_dump --profile=LinuxDebian87x64 linux_psaux > "$PROCS"
+set +x
 pid=$(grep cryptolock "$PROCS" | cut -d " " -f 1)
 
+set -x
 volatility -f res/guest_dump --profile=LinuxDebian87x64 -p "$pid" linux_proc_maps > "$MAPS"
+set +x
 heap_base_addr=$(grep heap "$MAPS" | awk '{ print $4 }')
-volatility -f res/guest_dump --profile=LinuxDebian87x64 -p "$pid" linux_dump_map --vma "${heap_base_addr}" -D "$OUT/"
+set -x
+volatility -f res/guest_dump --profile=LinuxDebian87x64 -p "$pid" linux_dump_map --vma "${heap_base_addr}" -D "$TMPDIR"
+set +x
 
 # Get a list of potentials keys from the heap of the malware.
 heap=$(find "$OUT" -maxdepth 1 -type f -name "task.$pid.*.vma" -print)
-python extract_key.py "$heap" "$OUT/"
+set -x
+python bin/extract_key.py "$heap" "$TMPDIR"
+set +x
+set +e
