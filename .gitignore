@@ -1,8 +1,2 @@
 *.swp
-*.qcow2
-*.iso
-build/
-export/
-vm/build
-vm/export
-vm/import
+export
