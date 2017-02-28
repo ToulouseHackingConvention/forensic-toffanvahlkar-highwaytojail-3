@@ -35,7 +35,7 @@ volatility -f res/guest_dump --profile=LinuxDebian87x64 -p "$pid" linux_dump_map
 set +x
 
 # Get a list of potentials keys from the heap of the malware.
-heap=$(find "$OUT" -maxdepth 1 -type f -name "task.$pid.*.vma" -print)
+heap=$(find "$TMPDIR" -maxdepth 1 -type f -name "task.$pid.*.vma" -print)
 set -x
 python bin/extract_key.py "$heap" "$TMPDIR"
 set +x

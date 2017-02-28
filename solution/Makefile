@@ -9,7 +9,7 @@ export:
 res:
 	-ln -s ../../solution/export res
 
-solve:
+solve: tmp export res
 	bin/dump_analyse
 
 clean:
